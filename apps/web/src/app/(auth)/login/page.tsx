@@ -1,13 +1,10 @@
 "use client";
 
-import type { Metadata } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, Input, Label } from "@casino/ui";
 import { signIn } from "@/lib/auth";
-
-export const metadata: Metadata = { title: "Entrar" };
 
 export default function LoginPage() {
   const router = useRouter();

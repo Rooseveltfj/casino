@@ -1,10 +1,10 @@
 /**
- * This file is superseded by app/(player)/page.tsx which serves the same `/` path.
- * DELETE this file — it causes a Next.js routing conflict with the (player) route group.
- * `tsc --noEmit` passes with both files present; `next build` will error until this is removed.
+ * TODO: Delete this file once Next.js supports it (or manually remove).
+ * It creates a routing conflict with app/(player)/page.tsx.
+ * For now, redirect to /jogos so the player layout renders correctly.
  */
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 
-export default function LegacyRoot() {
-  notFound();
+export default function RootRedirect() {
+  redirect("/jogos");
 }
