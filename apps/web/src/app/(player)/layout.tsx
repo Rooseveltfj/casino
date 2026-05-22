@@ -5,6 +5,7 @@ import { BottomNav } from "@/components/player/BottomNav";
 import { PlayerFooter } from "@/components/player/PlayerFooter";
 import { PlayerHeader } from "@/components/player/PlayerHeader";
 import { PlayerSidebar } from "@/components/player/PlayerSidebar";
+import { CommandSearch } from "@/components/search/command-search";
 
 export default function PlayerLayout({
   children,
@@ -59,6 +60,9 @@ export default function PlayerLayout({
       </div>
 
       <BottomNav />
+
+      {/* Global command palette — handles Cmd+K globally */}
+      <CommandSearch />
     </div>
   );
 }
