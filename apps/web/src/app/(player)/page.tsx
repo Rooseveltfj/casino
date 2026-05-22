@@ -1,240 +1,131 @@
-import Link from "next/link";
-import { Gamepad2, Tv, Zap } from "lucide-react";
-import { Badge, Button, Logo } from "@casino/ui";
+import { Suspense } from "react";
+import type { Metadata } from "next";
+import { and, desc, eq } from "drizzle-orm";
+import { getDb, games } from "@casino/database";
+import { HeroSection } from "@/components/home/HeroSection";
+import { StatsBar } from "@/components/home/StatsBar";
+import {
+  FeaturedGamesSection,
+  FeaturedGamesSkeleton,
+} from "@/components/home/FeaturedGames";
+import {
+  GameCatalogSection,
+  GameCatalogSkeleton,
+} from "@/components/home/GameCatalog";
+import { PromoCarousel } from "@/components/home/PromoCarousel";
+import { FinalCTA } from "@/components/home/FinalCTA";
+import type { GameCardData } from "@/components/home/GameCard";
 
-// ── Static game data ─────────────────────────────────────────────────────────
+export const metadata: Metadata = {
+  title: "Casino Platform — Jogue, Ganhe, Repita",
+  description:
+    "Mais de 30 jogos exclusivos: slots, crash, ao vivo, mesa e muito mais. Cadastro grátis em 60 segundos.",
+};
 
-interface GameData {
-  slug: string;
-  name: string;
-  provider: string;
-  category: string;
-  rtp: string;
-  isFeatured: boolean;
-  color: string;
+// ── Data fetching helpers ─────────────────────────────────────────────────────
+
+/** Static fallback when DATABASE_URL is not configured (demo / CI) */
+const DEMO_GAMES: GameCardData[] = [
+  { id: "1",  slug: "aviatorx",            name: "AviatorX",            provider: "Internal", category: "crash",   thumbnailUrl: null, rtp: "97.00", isFeatured: true  },
+  { id: "2",  slug: "diamond-mines",       name: "Diamond Mines",       provider: "Internal", category: "instant", thumbnailUrl: null, rtp: "97.00", isFeatured: true  },
+  { id: "3",  slug: "neon-dragon",         name: "Neon Dragon",         provider: "Internal", category: "slot",    thumbnailUrl: null, rtp: "96.10", isFeatured: true  },
+  { id: "4",  slug: "plinko-pro",          name: "Plinko Pro",          provider: "Internal", category: "instant", thumbnailUrl: null, rtp: "97.00", isFeatured: true  },
+  { id: "5",  slug: "pirates-fortune",     name: "Pirate's Fortune",    provider: "Internal", category: "slot",    thumbnailUrl: null, rtp: "95.50", isFeatured: true  },
+  { id: "6",  slug: "live-roulette-royale",name: "Live Roulette Royale",provider: "Internal", category: "live",    thumbnailUrl: null, rtp: "97.30", isFeatured: true  },
+  { id: "7",  slug: "golden-fruit-frenzy", name: "Golden Fruit Frenzy", provider: "Internal", category: "slot",    thumbnailUrl: null, rtp: "96.50", isFeatured: false },
+  { id: "8",  slug: "rocket-rush",         name: "Rocket Rush",         provider: "Internal", category: "crash",   thumbnailUrl: null, rtp: "97.00", isFeatured: false },
+  { id: "9",  slug: "live-blackjack-vip",  name: "Live Blackjack VIP",  provider: "Internal", category: "live",    thumbnailUrl: null, rtp: "99.28", isFeatured: false },
+  { id: "10", slug: "european-roulette",   name: "European Roulette",   provider: "Internal", category: "table",   thumbnailUrl: null, rtp: "97.30", isFeatured: false },
+  { id: "11", slug: "baccarat-classic",    name: "Baccarat Classic",    provider: "Internal", category: "table",   thumbnailUrl: null, rtp: "98.94", isFeatured: false },
+  { id: "12", slug: "dice-duel",           name: "Dice Duel",           provider: "Internal", category: "instant", thumbnailUrl: null, rtp: "98.00", isFeatured: false },
+  { id: "13", slug: "sugar-bonanza",       name: "Sugar Bonanza",       provider: "Internal", category: "slot",    thumbnailUrl: null, rtp: "96.80", isFeatured: false },
+  { id: "14", slug: "cyberpunk-neons",     name: "Cyberpunk Neons",     provider: "Internal", category: "slot",    thumbnailUrl: null, rtp: "95.90", isFeatured: false },
+  { id: "15", slug: "live-baccarat-prestige", name: "Live Baccarat Prestige", provider: "Internal", category: "live", thumbnailUrl: null, rtp: "98.94", isFeatured: false },
+  { id: "16", slug: "moon-launch",         name: "Moon Launch",         provider: "Internal", category: "crash",   thumbnailUrl: null, rtp: "96.50", isFeatured: false },
+  { id: "17", slug: "keno-blitz",          name: "Keno Blitz",          provider: "Internal", category: "instant", thumbnailUrl: null, rtp: "95.00", isFeatured: false },
+  { id: "18", slug: "viking-thunder",      name: "Viking Thunder",      provider: "Internal", category: "slot",    thumbnailUrl: null, rtp: "96.00", isFeatured: false },
+  { id: "19", slug: "aztec-gold-temple",   name: "Aztec Gold Temple",   provider: "Internal", category: "slot",    thumbnailUrl: null, rtp: "96.20", isFeatured: false },
+  { id: "20", slug: "crypto-crash",        name: "Crypto Crash",        provider: "Internal", category: "crash",   thumbnailUrl: null, rtp: "97.00", isFeatured: false },
+  { id: "21", slug: "live-dragon-tiger",   name: "Live Dragon Tiger",   provider: "Internal", category: "live",    thumbnailUrl: null, rtp: "96.27", isFeatured: false },
+  { id: "22", slug: "casino-poker",        name: "Casino Poker",        provider: "Internal", category: "table",   thumbnailUrl: null, rtp: "97.68", isFeatured: false },
+  { id: "23", slug: "diamond-rush-classic",name: "Diamond Rush Classic",provider: "Internal", category: "slot",    thumbnailUrl: null, rtp: "97.00", isFeatured: false },
+  { id: "24", slug: "space-blast",         name: "Space Blast",         provider: "Internal", category: "slot",    thumbnailUrl: null, rtp: "96.30", isFeatured: false },
+  { id: "25", slug: "book-of-nile",        name: "Book of Nile",        provider: "Internal", category: "slot",    thumbnailUrl: null, rtp: "95.80", isFeatured: false },
+  { id: "26", slug: "football-prediction", name: "Football Prediction", provider: "Internal", category: "sport",   thumbnailUrl: null, rtp: "95.00", isFeatured: false },
+  { id: "27", slug: "esports-fantasy",     name: "Esports Fantasy",     provider: "Internal", category: "sport",   thumbnailUrl: null, rtp: "95.00", isFeatured: false },
+  { id: "28", slug: "european-blackjack",  name: "European Blackjack",  provider: "Internal", category: "table",   thumbnailUrl: null, rtp: "99.60", isFeatured: false },
+  { id: "29", slug: "lucky-clover",        name: "Lucky Clover",        provider: "Internal", category: "slot",    thumbnailUrl: null, rtp: "97.20", isFeatured: false },
+  { id: "30", slug: "mystic-forest",       name: "Mystic Forest",       provider: "Internal", category: "slot",    thumbnailUrl: null, rtp: "96.00", isFeatured: false },
+];
+
+async function fetchAllGames(): Promise<GameCardData[]> {
+  try {
+    const db = getDb();
+    const rows = await db
+      .select({
+        id: games.id,
+        slug: games.slug,
+        name: games.name,
+        provider: games.provider,
+        category: games.category,
+        thumbnailUrl: games.thumbnailUrl,
+        rtp: games.rtp,
+        isFeatured: games.isFeatured,
+      })
+      .from(games)
+      .where(and(eq(games.isActive, true)))
+      .orderBy(desc(games.isFeatured), desc(games.playCount));
+
+    return rows.map((r) => ({
+      ...r,
+      thumbnailUrl: r.thumbnailUrl ?? null,
+      rtp: r.rtp ?? null,
+    }));
+  } catch {
+    // DATABASE_URL not configured — serve static demo data
+    return DEMO_GAMES;
+  }
 }
 
-const FEATURED_GAMES: GameData[] = [
-  { slug: "aviatorx", name: "AviatorX", provider: "Internal", category: "Crash", rtp: "97.0", isFeatured: true, color: "from-[#0A0E1A] to-[#003d5c]" },
-  { slug: "diamond-mines", name: "Diamond Mines", provider: "Internal", category: "Instant", rtp: "97.0", isFeatured: true, color: "from-[#0A0E1A] to-[#1a1a4e]" },
-  { slug: "neon-dragon", name: "Neon Dragon", provider: "Internal", category: "Slot", rtp: "96.1", isFeatured: true, color: "from-[#0A0E1A] to-[#1a0030]" },
-  { slug: "plinko-pro", name: "Plinko Pro", provider: "Internal", category: "Instant", rtp: "97.0", isFeatured: false, color: "from-[#0A0E1A] to-[#002a1a]" },
-  { slug: "pirates-fortune", name: "Pirate's Fortune", provider: "Internal", category: "Slot", rtp: "95.5", isFeatured: true, color: "from-[#0A0E1A] to-[#2a1a00]" },
-  { slug: "live-roulette-royale", name: "Live Roulette Royale", provider: "Internal", category: "Ao Vivo", rtp: "97.3", isFeatured: true, color: "from-[#0A0E1A] to-[#1a0a2a]" },
-];
+// ── Async server sections (each suspends independently) ───────────────────────
 
-const LIVE_GAMES = [
-  { name: "Baccarat Prestige", players: 142, color: "from-[#0A0E1A] to-[#1a2a0a]" },
-  { name: "Roulette Royale", players: 89, color: "from-[#0A0E1A] to-[#2a0a1a]" },
-  { name: "Blackjack VIP", players: 56, color: "from-[#0A0E1A] to-[#0a1a2a]" },
-  { name: "Dragon Tiger", players: 34, color: "from-[#0A0E1A] to-[#1a1a0a]" },
-];
+async function FeaturedAsync() {
+  const allGames = await fetchAllGames();
+  const featured = allGames.filter((g) => g.isFeatured).slice(0, 6);
+  return <FeaturedGamesSection games={featured} />;
+}
 
-const PROMOS = [
-  { title: "Bônus de Boas-vindas", desc: "100% até R$ 500 no primeiro depósito", cta: "Resgatar", color: "cyan" },
-  { title: "Cashback Semanal", desc: "10% de cashback toda segunda-feira", cta: "Saiba mais", color: "gold" },
-  { title: "Free Spins Quinta", desc: "50 giros grátis no jogo da semana", cta: "Participar", color: "cyan" },
-];
-
-// ── Game Card ────────────────────────────────────────────────────────────────
-
-function GameCard({ game }: { game: GameData }) {
-  return (
-    <Link href={`/jogos/${game.slug}`} className="group block">
-      <div className="relative rounded-xl overflow-hidden border border-border-default hover:border-accent-primary/50 transition-all hover:shadow-glow-primary bg-surface-elevated">
-        {/* Thumbnail */}
-        <div
-          className={`aspect-[3/4] bg-gradient-to-br ${game.color} flex flex-col items-center justify-center gap-3 relative`}
-        >
-          <Gamepad2 size={32} className="text-text-muted opacity-30" />
-          <p className="text-[10px] text-text-muted uppercase tracking-wider">
-            {game.category}
-          </p>
-
-          {/* Hover overlay */}
-          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <Button size="sm" className="text-xs scale-90 group-hover:scale-100 transition-transform">
-              Jogar
-            </Button>
-          </div>
-
-          {game.isFeatured && (
-            <span className="absolute top-2 left-2 text-[9px] font-bold bg-accent-secondary text-background px-1.5 py-0.5 rounded-full uppercase">
-              Destaque
-            </span>
-          )}
-        </div>
-
-        {/* Info */}
-        <div className="p-2.5">
-          <p className="text-xs font-medium text-text-primary truncate">{game.name}</p>
-          <div className="flex items-center gap-1 mt-1">
-            <span className="text-[10px] text-text-muted truncate flex-1">{game.provider}</span>
-            <span className="text-[10px] font-mono text-accent-primary shrink-0">
-              {game.rtp}%
-            </span>
-          </div>
-        </div>
-      </div>
-    </Link>
-  );
+async function CatalogAsync() {
+  const allGames = await fetchAllGames();
+  return <GameCatalogSection games={allGames} />;
 }
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PlayerHomePage() {
   return (
-    <div className="max-w-screen-2xl mx-auto">
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden min-h-[340px] sm:min-h-[400px] flex items-center px-4 sm:px-8 py-12">
-        {/* Background gradient */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(ellipse 80% 100% at 80% 50%, rgba(0,212,255,0.1) 0%, rgba(255,184,0,0.05) 50%, transparent 80%)",
-          }}
-        />
+    <>
+      {/* Section 1 — Hero (no data, renders immediately) */}
+      <HeroSection />
 
-        <div className="relative z-10 max-w-2xl">
-          <div className="flex items-center gap-3 mb-4">
-            <Logo size={48} />
-            <Badge variant="default" className="text-xs">Demo</Badge>
-          </div>
+      {/* Section 2 — Stats bar (no data, renders immediately) */}
+      <StatsBar />
 
-          <h1 className="font-heading text-3xl sm:text-5xl font-bold text-text-primary leading-tight">
-            A melhor plataforma{" "}
-            <span className="text-accent-primary">de cassino</span>
-          </h1>
-          <p className="mt-4 text-text-secondary text-sm sm:text-base max-w-lg">
-            Slots, ao vivo, crash e esportes — tudo em um só lugar. Comece com
-            R$&nbsp;1.000 de saldo demo sem depósito.
-          </p>
+      {/* Section 3 — Featured games */}
+      <Suspense fallback={<FeaturedGamesSkeleton />}>
+        <FeaturedAsync />
+      </Suspense>
 
-          <div className="flex flex-wrap gap-3 mt-6">
-            <Button asChild size="lg">
-              <Link href="/register">Jogar Grátis</Link>
-            </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link href="/jogos">Ver Todos os Jogos</Link>
-            </Button>
-          </div>
+      {/* Section 4 — Full catalogue with tabs + infinite scroll */}
+      <Suspense fallback={<GameCatalogSkeleton />}>
+        <CatalogAsync />
+      </Suspense>
 
-          <div className="flex items-center gap-6 mt-8 text-sm text-text-muted">
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
-              30+ jogos disponíveis
-            </span>
-            <span>RTP médio 96.5%</span>
-            <span>Sem depósito</span>
-          </div>
-        </div>
-      </section>
+      {/* Section 5 — Promotions carousel (static data, no suspense) */}
+      <PromoCarousel />
 
-      {/* ── Featured games ────────────────────────────────────────────────── */}
-      <section className="px-4 sm:px-6 py-8">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="font-heading text-xl font-bold text-text-primary flex items-center gap-2">
-            <Zap size={20} className="text-accent-primary" />
-            Jogos em Destaque
-          </h2>
-          <Link
-            href="/jogos"
-            className="text-sm text-accent-primary hover:underline"
-          >
-            Ver todos →
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-          {FEATURED_GAMES.map((game) => (
-            <GameCard key={game.slug} game={game} />
-          ))}
-        </div>
-      </section>
-
-      {/* ── Live casino ───────────────────────────────────────────────────── */}
-      <section className="px-4 sm:px-6 py-8 border-t border-border-subtle">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="font-heading text-xl font-bold text-text-primary flex items-center gap-2">
-            <Tv size={20} className="text-error" />
-            Casino ao Vivo
-            <span className="text-xs font-normal text-error bg-error/20 border border-error/30 px-2 py-0.5 rounded-full animate-pulse">
-              AO VIVO
-            </span>
-          </h2>
-          <Link href="/ao-vivo" className="text-sm text-accent-primary hover:underline">
-            Ver sala →
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {LIVE_GAMES.map(({ name, players, color }) => (
-            <Link
-              key={name}
-              href="/ao-vivo"
-              className="group relative rounded-xl overflow-hidden border border-border-default hover:border-error/50 transition-all"
-            >
-              <div
-                className={`aspect-video bg-gradient-to-br ${color} flex flex-col items-center justify-center gap-2`}
-              >
-                <Tv size={24} className="text-text-muted opacity-40" />
-                <span className="text-[10px] text-error bg-error/20 border border-error/30 px-2 py-0.5 rounded-full">
-                  ● AO VIVO
-                </span>
-              </div>
-              <div className="p-2.5 bg-surface-elevated">
-                <p className="text-xs font-medium text-text-primary truncate">{name}</p>
-                <p className="text-[10px] text-text-muted mt-0.5">{players} jogadores</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Promotions ────────────────────────────────────────────────────── */}
-      <section className="px-4 sm:px-6 py-8 border-t border-border-subtle">
-        <h2 className="font-heading text-xl font-bold text-text-primary mb-5">
-          Promoções Ativas
-        </h2>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {PROMOS.map(({ title, desc, cta, color }) => (
-            <div
-              key={title}
-              className="relative rounded-xl border border-border-default bg-surface-elevated overflow-hidden p-5 hover:border-accent-primary/40 transition-all"
-            >
-              <div
-                className="absolute inset-0 opacity-10 pointer-events-none"
-                style={{
-                  background:
-                    color === "cyan"
-                      ? "radial-gradient(ellipse at 80% 20%, #00D4FF, transparent 70%)"
-                      : "radial-gradient(ellipse at 80% 20%, #FFB800, transparent 70%)",
-                }}
-              />
-              <div className="relative z-10">
-                <p
-                  className={`text-xs font-semibold uppercase tracking-wider mb-1 ${color === "cyan" ? "text-accent-primary" : "text-accent-secondary"}`}
-                >
-                  Promoção
-                </p>
-                <h3 className="font-heading text-base font-bold text-text-primary">
-                  {title}
-                </h3>
-                <p className="text-sm text-text-secondary mt-1.5 mb-4">{desc}</p>
-                <Button
-                  variant={color === "gold" ? "gold" : "default"}
-                  size="sm"
-                  asChild
-                >
-                  <Link href="/promocoes">{cta}</Link>
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-    </div>
+      {/* Section 6 — Final CTA (static, no data) */}
+      <FinalCTA />
+    </>
   );
 }
