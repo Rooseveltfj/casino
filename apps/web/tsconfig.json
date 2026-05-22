@@ -1,0 +1,18 @@
+{
+  "extends": "@casino/typescript-config/nextjs.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "plugins": [{ "name": "next" }],
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "exactOptionalPropertyTypes": false,
+    "noUncheckedIndexedAccess": false
+  },
+  "include": ["src", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", "dist", ".next"]
+}

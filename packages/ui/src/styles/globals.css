@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+/* ─── Design token definitions ────────────────────────────────────────────── */
+@theme {
+  /* Backgrounds — azul-petróleo escuro, nunca preto puro */
+  --color-background: #0a0e1a;
+  --color-surface: #131826;
+  --color-surface-elevated: #1a2236;
+
+  /* Accents */
+  --color-accent-primary: #00d4ff;
+  --color-accent-secondary: #ffb800;
+
+  /* Semantic */
+  --color-success: #00f5a0;
+  --color-error: #ff3d71;
+  --color-warning: #ffaa00;
+
+  /* Text */
+  --color-text-primary: #f0f4ff;
+  --color-text-secondary: #8892b0;
+  --color-text-muted: #4a5568;
+
+  /* Borders */
+  --color-border-subtle: oklch(100% 0 0 / 5%);
+  --color-border-default: oklch(100% 0 0 / 10%);
+  --color-border-strong: oklch(100% 0 0 / 20%);
+
+  /* ── shadcn/ui compat aliases ─────────────────────────────── */
+  --color-foreground: #f0f4ff;
+  --color-card: #131826;
+  --color-card-foreground: #f0f4ff;
+  --color-popover: #1a2236;
+  --color-popover-foreground: #f0f4ff;
+  --color-primary: #00d4ff;
+  --color-primary-foreground: #0a0e1a;
+  --color-secondary: #1a2236;
+  --color-secondary-foreground: #f0f4ff;
+  --color-muted: #1a2236;
+  --color-muted-foreground: #8892b0;
+  --color-destructive: #ff3d71;
+  --color-destructive-foreground: #f0f4ff;
+  --color-border: oklch(100% 0 0 / 10%);
+  --color-input: oklch(100% 0 0 / 8%);
+  --color-ring: #00d4ff;
+
+  /* Typography */
+  --font-heading: "Satoshi", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", monospace;
+  --font-sans: var(--font-body);
+
+  /* Border-radius scale (override Tailwind defaults) */
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Glow shadows */
+  --shadow-glow-primary: 0 0 24px rgba(0, 212, 255, 0.3);
+  --shadow-glow-gold: 0 0 24px rgba(255, 184, 0, 0.3);
+  --shadow-glow-success: 0 0 24px rgba(0, 245, 160, 0.3);
+  --shadow-glow-error: 0 0 24px rgba(255, 61, 113, 0.3);
+
+  /* Custom animations */
+  --animate-glow-pulse: glow-pulse 3s ease-in-out infinite;
+  --animate-spin-glow: spin 1s linear infinite;
+  --animate-shimmer: shimmer 2s linear infinite;
+}
+
+/* ─── Raw CSS custom properties (semantic aliases) ────────────────────────── */
+:root {
+  --background: #0a0e1a;
+  --surface: #131826;
+  --surface-elevated: #1a2236;
+  --accent-primary: #00d4ff;
+  --accent-secondary: #ffb800;
+  --success: #00f5a0;
+  --error: #ff3d71;
+  --warning: #ffaa00;
+  --text-primary: #f0f4ff;
+  --text-secondary: #8892b0;
+  --text-muted: #4a5568;
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-default: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.2);
+  --glow-primary: 0 0 24px rgba(0, 212, 255, 0.3);
+  --glow-gold: 0 0 24px rgba(255, 184, 0, 0.3);
+}
+
+/* ─── Keyframe definitions ────────────────────────────────────────────────── */
+@keyframes glow-pulse {
+  0%,
+  100% {
+    opacity: 0.8;
+    box-shadow:
+      0 0 24px rgba(0, 212, 255, 0.3),
+      0 0 48px rgba(0, 212, 255, 0.1);
+  }
+  50% {
+    opacity: 1;
+    box-shadow:
+      0 0 48px rgba(0, 212, 255, 0.55),
+      0 0 96px rgba(0, 212, 255, 0.2);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+
+/* ─── Base layer ──────────────────────────────────────────────────────────── */
+@layer base {
+  * {
+    border-color: var(--border-default);
+    box-sizing: border-box;
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Visible focus ring for accessibility */
+  :focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+  }
+
+  /* Respect reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

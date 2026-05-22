@@ -1,0 +1,36 @@
+/*
+  Casino Platform — shared Tailwind v4 theme
+  Import this file in your app's main CSS before @tailwind utilities.
+*/
+
+@import "tailwindcss";
+
+@theme {
+  /* Background layers */
+  --color-bg-base: #0a0e1a;
+  --color-bg-surface: #131826;
+  --color-bg-elevated: #1a2236;
+
+  /* Accent palette */
+  --color-accent-cyan: #00d4ff;
+  --color-accent-gold: #ffb800;
+
+  /* Semantic */
+  --color-success: #00f5a0;
+  --color-error: #ff3d71;
+  --color-warning: #ffaa00;
+
+  /* Typography families */
+  --font-heading: "Satoshi", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Border radius scale */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+
+  /* Glow shadows for interactive elements */
+  --shadow-glow-cyan: 0 0 20px color-mix(in srgb, #00d4ff 40%, transparent);
+  --shadow-glow-gold: 0 0 20px color-mix(in srgb, #ffb800 40%, transparent);
+}
