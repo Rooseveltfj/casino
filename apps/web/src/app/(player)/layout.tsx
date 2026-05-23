@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { Toaster } from "@casino/ui";
 import { BottomNav } from "@/components/player/BottomNav";
 import { PlayerFooter } from "@/components/player/PlayerFooter";
 import { PlayerHeader } from "@/components/player/PlayerHeader";
@@ -63,6 +64,9 @@ export default function PlayerLayout({
 
       {/* Global command palette — handles Cmd+K globally */}
       <CommandSearch />
+
+      {/* Toast notifications */}
+      <Toaster />
     </div>
   );
 }

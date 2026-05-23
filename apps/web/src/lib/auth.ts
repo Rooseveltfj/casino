@@ -64,7 +64,31 @@ interface AuthClientInterface {
       data: { status: boolean } | null;
       error: { message?: string } | null;
     }>;
+    disable: (opts: { password: string }) => Promise<{
+      data: { status: boolean } | null;
+      error: { message?: string } | null;
+    }>;
   };
+  changePassword: (opts: {
+    currentPassword: string;
+    newPassword: string;
+    revokeOtherSessions?: boolean;
+  }) => Promise<{ data: null; error: { message?: string } | null }>;
+  listSessions: () => Promise<{
+    data: Array<{
+      id: string;
+      token: string;
+      userAgent?: string | null;
+      ipAddress?: string | null;
+      createdAt: Date;
+      expiresAt: Date;
+    }> | null;
+    error: { message?: string } | null;
+  }>;
+  revokeSession: (opts: { token: string }) => Promise<{
+    data: { status: boolean } | null;
+    error: { message?: string } | null;
+  }>;
 }
 
 const _rawClient = createAuthClient({
