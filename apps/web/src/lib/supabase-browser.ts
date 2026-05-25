@@ -72,3 +72,65 @@ export function subscribeToWalletChanges(
     void client.removeChannel(channel);
   };
 }
+
+// ── Notifications channel ─────────────────────────────────────────────────────
+
+export interface NotificationPayload {
+  id: string;
+  user_id: string;
+  type: string;
+  title: string;
+  body: string | null;
+  metadata: Record<string, unknown>;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface NotificationSubscriptionOpts {
+  userId: string;
+  onInsert: (payload: NotificationPayload) => void;
+  onUpdate?: (payload: NotificationPayload) => void;
+}
+
+/**
+ * Subscribes to inserts and updates on the user's notifications row.
+ * Channel name `user:{id}` matches the convention used by server-side publish.
+ */
+export function subscribeToNotifications(
+  opts: NotificationSubscriptionOpts,
+): () => void {
+  const client = getSupabaseBrowser();
+  if (!client) return () => {};
+
+  const channel: RealtimeChannel = client
+    .channel(`user:${opts.userId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "notifications",
+        filter: `user_id=eq.${opts.userId}`,
+      },
+      (payload) => {
+        opts.onInsert(payload.new as NotificationPayload);
+      },
+    )
+    .on(
+      "postgres_changes",
+      {
+        event: "UPDATE",
+        schema: "public",
+        table: "notifications",
+        filter: `user_id=eq.${opts.userId}`,
+      },
+      (payload) => {
+        opts.onUpdate?.(payload.new as NotificationPayload);
+      },
+    )
+    .subscribe();
+
+  return () => {
+    void client.removeChannel(channel);
+  };
+}

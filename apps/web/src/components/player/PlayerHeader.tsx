@@ -26,6 +26,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/hooks/useRole";
 import { SearchTrigger } from "@/components/search/command-search";
 import { WalletWidget } from "@/components/wallet/wallet-widget";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 const NAV_LINKS = [
   { href: "/jogos", label: "Cassino" },
@@ -184,6 +185,7 @@ export function PlayerHeader() {
           {isLoggedIn ? (
             <>
               <WalletWidget />
+              <NotificationBell />
               <AvatarMenu />
             </>
           ) : (

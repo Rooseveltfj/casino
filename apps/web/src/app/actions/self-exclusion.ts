@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { auditLogs, getDb, sessions, users } from "@casino/database";
 import { auth } from "@casino/database/auth";
+import { notifyUser } from "@/app/actions/notifications";
 
 const SelfExcludeSchema = z.object({
   period: z.enum(["1week", "1month", "6months", "permanent"]),
@@ -58,6 +59,21 @@ export async function selfExclude(
       resourceId: session.user.id,
       ipAddress: hdrs.get("x-forwarded-for") ?? hdrs.get("x-real-ip") ?? null,
       userAgent: hdrs.get("user-agent") ?? null,
+      metadata: {
+        period: parsed.data.period,
+        expiresAt: expiresAt?.toISOString() ?? null,
+      },
+    });
+
+    // 4. Notification — informa o player (e quaisquer outras abas) que a conta foi suspensa
+    await notifyUser({
+      userId: session.user.id,
+      type: "self_exclusion",
+      title: "Conta suspensa por autoexclusão",
+      body:
+        parsed.data.period === "permanent"
+          ? "Sua conta foi marcada como autoexcluída permanentemente."
+          : `Sua conta ficará bloqueada até ${expiresAt?.toLocaleDateString("pt-BR")}.`,
       metadata: {
         period: parsed.data.period,
         expiresAt: expiresAt?.toISOString() ?? null,

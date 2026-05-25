@@ -12,6 +12,7 @@ import {
 } from "@casino/database";
 import { auth } from "@casino/database/auth";
 import { rateLimit } from "@/lib/rate-limit";
+import { notifyUser } from "@/app/actions/notifications";
 
 const DEMO_TOPUP_AMOUNT = 200;
 const DEMO_TOPUP_MAX_PER_DAY = 5;
@@ -112,6 +113,19 @@ export async function addDemoChips(): Promise<DemoTopupResult> {
         amount: DEMO_TOPUP_AMOUNT,
         newBalance: newBalance.toFixed(2),
         rateLimitCount: rl.count,
+      },
+    });
+
+    // 4. Notification (fires Realtime toast on the player's other open tabs)
+    await notifyUser({
+      userId: session.user.id,
+      type: "demo_topup",
+      title: `+${DEMO_TOPUP_AMOUNT} fichas demo adicionadas`,
+      body: `Saldo demo agora é R$ ${newBalance.toFixed(2)}. Restam ${rl.remaining} recargas hoje.`,
+      metadata: {
+        amount: DEMO_TOPUP_AMOUNT,
+        newBalance: newBalance.toFixed(2),
+        remaining: rl.remaining,
       },
     });
 

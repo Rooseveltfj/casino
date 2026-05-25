@@ -4,6 +4,7 @@ export * from "./bonuses";
 export * from "./game_sessions";
 export * from "./games";
 export * from "./kyc_documents";
+export * from "./notifications";
 export * from "./psp_transactions";
 export * from "./transactions";
 export * from "./users";
