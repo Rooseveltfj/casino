@@ -2,13 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import {
   ChevronDown,
   Gift,
   LogOut,
-  Menu,
   Shield,
   User,
   Wallet,
@@ -26,6 +25,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/hooks/useRole";
 import { SearchTrigger } from "@/components/search/command-search";
+import { WalletWidget } from "@/components/wallet/wallet-widget";
 
 const NAV_LINKS = [
   { href: "/jogos", label: "Cassino" },
@@ -137,7 +137,6 @@ function AvatarMenu() {
 
 export function PlayerHeader() {
   const pathname = usePathname();
-  const router   = useRouter();
   const { isLoggedIn } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -184,25 +183,7 @@ export function PlayerHeader() {
 
           {isLoggedIn ? (
             <>
-              {/* Wallet (desktop) */}
-              <button
-                onClick={() => router.push("/carteira")}
-                className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-elevated border border-border-default hover:border-accent-primary/40 hover:shadow-glow-primary transition-all text-sm"
-                aria-label="Acessar carteira"
-              >
-                <Wallet size={14} className="text-accent-primary" aria-hidden="true" />
-                <span className="font-mono text-text-primary">R$&nbsp;1.000,00</span>
-              </button>
-
-              {/* Wallet icon (mobile) */}
-              <button
-                onClick={() => router.push("/carteira")}
-                className="sm:hidden p-2 rounded-lg text-accent-primary hover:bg-accent-primary/10 transition-colors"
-                aria-label="Carteira"
-              >
-                <Wallet size={20} aria-hidden="true" />
-              </button>
-
+              <WalletWidget />
               <AvatarMenu />
             </>
           ) : (

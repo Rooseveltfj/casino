@@ -15,8 +15,20 @@ const VALID_TYPES: TransactionRow["type"][] = [
   "rollback",
 ];
 
+const VALID_WALLET_TYPES: TransactionRow["walletType"][] = [
+  "demo",
+  "real",
+  "bonus",
+];
+
 function isValidType(v: string | null): v is TransactionRow["type"] {
   return v !== null && (VALID_TYPES as readonly string[]).includes(v);
+}
+
+function isValidWalletType(
+  v: string | null,
+): v is TransactionRow["walletType"] {
+  return v !== null && (VALID_WALLET_TYPES as readonly string[]).includes(v);
 }
 
 export async function GET(req: NextRequest) {
@@ -33,6 +45,10 @@ export async function GET(req: NextRequest) {
   const limit = Math.min(Number(url.searchParams.get("limit") ?? 50), 200);
   const typeParam = url.searchParams.get("type");
   const type = isValidType(typeParam) ? typeParam : undefined;
+  const walletTypeParam = url.searchParams.get("walletType");
+  const walletType = isValidWalletType(walletTypeParam)
+    ? walletTypeParam
+    : undefined;
 
   const fromStr = url.searchParams.get("from");
   const toStr = url.searchParams.get("to");
@@ -44,6 +60,7 @@ export async function GET(req: NextRequest) {
     cursor,
     limit,
     type,
+    walletType,
     fromDate,
     toDate,
   });

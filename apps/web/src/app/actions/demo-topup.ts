@@ -11,12 +11,16 @@ import {
   wallets,
 } from "@casino/database";
 import { auth } from "@casino/database/auth";
+import { rateLimit } from "@/lib/rate-limit";
 
 const DEMO_TOPUP_AMOUNT = 200;
+const DEMO_TOPUP_MAX_PER_DAY = 5;
 
-export async function addDemoChips(): Promise<
-  { ok: true; newBalance: string } | { ok: false; error: string }
-> {
+export type DemoTopupResult =
+  | { ok: true; newBalance: string; remaining: number }
+  | { ok: false; error: string; rateLimited?: boolean; resetAt?: string };
+
+export async function addDemoChips(): Promise<DemoTopupResult> {
   try {
     const hdrs = await headers();
     const session = await auth.api.getSession({
@@ -24,9 +28,24 @@ export async function addDemoChips(): Promise<
     });
     if (!session?.user) return { ok: false, error: "UNAUTHORIZED" };
 
+    // ── Rate limit (5/day) ───────────────────────────────────────────────
+    const rl = await rateLimit({
+      action: "demo_topup",
+      userId: session.user.id,
+      max: DEMO_TOPUP_MAX_PER_DAY,
+    });
+    if (!rl.ok) {
+      return {
+        ok: false,
+        rateLimited: true,
+        resetAt: rl.resetAt.toISOString(),
+        error: `Limite diário atingido (${DEMO_TOPUP_MAX_PER_DAY} fichas demo/dia). Tente novamente amanhã.`,
+      };
+    }
+
     const db = getDb();
 
-    // Find or create wallet
+    // ── Find or create wallet ────────────────────────────────────────────
     const [existingWallet] = await db
       .select()
       .from(wallets)
@@ -55,7 +74,7 @@ export async function addDemoChips(): Promise<
 
     const newBalance = currentBalance + DEMO_TOPUP_AMOUNT;
 
-    // 1. Append-only ledger entry (per WALLET.md rules)
+    // 1. Append-only ledger entry
     await db.insert(transactions).values({
       walletId,
       type: "adjustment",
@@ -64,7 +83,11 @@ export async function addDemoChips(): Promise<
       balanceBefore: currentBalance.toFixed(2),
       balanceAfter: newBalance.toFixed(2),
       referenceId: randomUUID(),
-      metadata: { reason: "demo_topup", source: "profile_button" },
+      metadata: {
+        reason: "demo_topup",
+        source: "wallet_drawer",
+        rateLimitCount: rl.count,
+      },
     });
 
     // 2. Update wallet cache
@@ -85,11 +108,15 @@ export async function addDemoChips(): Promise<
       resourceId: walletId,
       ipAddress: hdrs.get("x-forwarded-for") ?? hdrs.get("x-real-ip") ?? null,
       userAgent: hdrs.get("user-agent") ?? null,
-      metadata: { amount: DEMO_TOPUP_AMOUNT, newBalance: newBalance.toFixed(2) },
+      metadata: {
+        amount: DEMO_TOPUP_AMOUNT,
+        newBalance: newBalance.toFixed(2),
+        rateLimitCount: rl.count,
+      },
     });
 
     revalidatePath("/perfil");
-    return { ok: true, newBalance: newBalance.toFixed(2) };
+    return { ok: true, newBalance: newBalance.toFixed(2), remaining: rl.remaining };
   } catch (err) {
     return {
       ok: false,

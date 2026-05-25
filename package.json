@@ -21,5 +21,12 @@
   "engines": {
     "node": ">=18",
     "pnpm": ">=9"
+  },
+  "pnpm": {
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "@upstash/redis"
+      ]
+    }
   }
 }

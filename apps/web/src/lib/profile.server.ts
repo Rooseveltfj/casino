@@ -214,6 +214,7 @@ export interface GetTransactionsParams {
   cursor?: string;
   limit?: number;
   type?: TransactionRow["type"];
+  walletType?: TransactionRow["walletType"];
   fromDate?: Date;
   toDate?: Date;
 }
@@ -221,7 +222,7 @@ export interface GetTransactionsParams {
 export async function getTransactions(
   params: GetTransactionsParams,
 ): Promise<{ rows: TransactionRow[]; nextCursor: string | null }> {
-  const { userId, cursor, limit = 50, type, fromDate, toDate } = params;
+  const { userId, cursor, limit = 50, type, walletType, fromDate, toDate } = params;
 
   try {
     const db = getDb();
@@ -239,6 +240,7 @@ export async function getTransactions(
     ];
 
     if (type) conds.push(eq(transactions.type, type));
+    if (walletType) conds.push(eq(transactions.walletType, walletType));
     if (fromDate) conds.push(gte(transactions.createdAt, fromDate));
     if (toDate) conds.push(lte(transactions.createdAt, toDate));
 

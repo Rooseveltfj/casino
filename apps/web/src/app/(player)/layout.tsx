@@ -7,6 +7,8 @@ import { PlayerFooter } from "@/components/player/PlayerFooter";
 import { PlayerHeader } from "@/components/player/PlayerHeader";
 import { PlayerSidebar } from "@/components/player/PlayerSidebar";
 import { CommandSearch } from "@/components/search/command-search";
+import { WalletProvider } from "@/components/wallet/wallet-provider";
+import { WalletDrawer } from "@/components/wallet/wallet-drawer";
 
 export default function PlayerLayout({
   children,
@@ -48,25 +50,30 @@ export default function PlayerLayout({
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
-      <PlayerHeader />
+    <WalletProvider>
+      <div className="min-h-screen bg-background">
+        <PlayerHeader />
 
-      <div className="relative z-10 flex">
-        <PlayerSidebar />
+        <div className="relative z-10 flex">
+          <PlayerSidebar />
 
-        <div className="flex flex-col flex-1 md:ml-60 min-w-0">
-          <main className="flex-1 pb-16 md:pb-0">{children}</main>
-          <PlayerFooter />
+          <div className="flex flex-col flex-1 md:ml-60 min-w-0">
+            <main className="flex-1 pb-16 md:pb-0">{children}</main>
+            <PlayerFooter />
+          </div>
         </div>
+
+        <BottomNav />
+
+        {/* Global command palette — handles Cmd+K globally */}
+        <CommandSearch />
+
+        {/* Wallet slide-over drawer */}
+        <WalletDrawer />
+
+        {/* Toast notifications */}
+        <Toaster />
       </div>
-
-      <BottomNav />
-
-      {/* Global command palette — handles Cmd+K globally */}
-      <CommandSearch />
-
-      {/* Toast notifications */}
-      <Toaster />
-    </div>
+    </WalletProvider>
   );
 }
